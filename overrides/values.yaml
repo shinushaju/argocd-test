@@ -1,0 +1,5 @@
+localPathProvisioner:
+  storageClass:
+    ## Set StorageClass as the default StorageClass
+    ## Ignored if storageClass.create is false
+    defaultClass: true

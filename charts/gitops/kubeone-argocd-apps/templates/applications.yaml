@@ -62,7 +62,7 @@ spec:
       valueFiles:
       - values.yaml
       - $values/{{ $.Values.envSpecificFolderPath }}/values/values.yaml
-      - $values/{{ $.Values.envSpecificFolderPath }}/secrets/values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}/overrides/values.yaml
     {{- end }}
   destination:
     server: {{ $.Values.destinationServer | quote }}
