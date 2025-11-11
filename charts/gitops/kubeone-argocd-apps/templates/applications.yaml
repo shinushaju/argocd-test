@@ -61,6 +61,8 @@ spec:
     helm:
       valueFiles:
       - values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}/values/values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}/secrets/values.yaml
     {{- end }}
   destination:
     server: {{ $.Values.destinationServer | quote }}

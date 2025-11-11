@@ -1,4 +1,3 @@
-# Default values for local-path-provisioner.
 localPathProvisioner:
   replicaCount: 1
   commonLabels: {}
