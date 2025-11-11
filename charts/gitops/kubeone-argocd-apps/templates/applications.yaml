@@ -61,6 +61,7 @@ spec:
         {{- toYaml $kubeoneApp.values | nindent 8 }}
     {{- else }}
     helm:
+      releaseName: local-path-provisioner
       valueFiles:
       - values.yaml
       - $values/{{ $.Values.envSpecificFolderPath }}/values/values.yaml

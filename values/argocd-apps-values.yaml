@@ -33,6 +33,7 @@ kubeoneApps:
   localPathProvisioner:
     enable: true
     name: local-path-provisioner # Specify the chart name (required)
+    fullNameOverride: local-path-provisioner-legacy-snapshots-datacenter
     namespace: kube-system
     autoSync: false
     prune: false

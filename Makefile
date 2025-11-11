@@ -11,5 +11,5 @@ deploy-argocd-apps:
 argocd-port-forward:
 	KUBECONFIG=${KUBECONFIG} kubectl -n argocd port-forward svc/argocd-argocd-server 8080:443
 
-# k1-cleanup-argocd-apps:
-# 	KUBECONFIG=${KUBECONFIG} helm uninstall kubeone-argocd-apps --namespace argocd || true
+k1-cleanup-argocd-apps:
+	KUBECONFIG=${KUBECONFIG} helm uninstall kubeone-argocd-apps --namespace argocd || true
