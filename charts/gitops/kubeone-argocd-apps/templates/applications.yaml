@@ -63,8 +63,8 @@ spec:
     helm:
       valueFiles:
       - values.yaml
-      - $values/{{ $.Values.envSpecificFolderPath }}values/values.yaml
-      - $values/{{ $.Values.envSpecificFolderPath }}overrides/values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}/values/values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}/overrides/values.yaml
     {{- end }}
   destination:
     server: {{ $.Values.destinationServer | quote }}
