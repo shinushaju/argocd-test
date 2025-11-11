@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.localPathProvisioner.configmap.name }}
+  namespace: {{ include "local-path-provisioner.namespace" . }}
+  labels:
+{{ include "local-path-provisioner.labels" . | indent 4 }}
+data:
+  config.json: |-
+    {{- $config := dict }}
+    {{- with .Values.localPathProvisioner.nodePathMap }}
+    {{- $config = set $config "nodePathMap" . }}
+    {{- end }}
+    {{- with .Values.localPathProvisioner.sharedFileSystemPath }}
+    {{- $config = set $config "sharedFileSystemPath" . }}
+    {{- end }}
+    {{- with .Values.localPathProvisioner.storageClassConfigs }}
+    {{- $configs := dict }}
+    {{- range $key, $value := . }}
+      {{- $configValue := dict }}
+      {{- with $value.nodePathMap }}
+      {{- $configValue = set $configValue "nodePathMap" . }}
+      {{- end }}
+      {{- with $value.sharedFileSystemPath }}
+      {{- $configValue = set $configValue "sharedFileSystemPath" . }}
+      {{- end }}
+      {{- $configs = set $configs $key $configValue }}
+    {{- end }}
+    {{- $config = set $config "storageClassConfigs" $configs }}
+    {{- end }}
+    {{- $config | toPrettyJson | nindent 4 }}
+  setup: |-
+    {{- .Values.localPathProvisioner.configmap.setup | nindent 4 }}
+  teardown: |-
+    {{- .Values.localPathProvisioner.configmap.teardown | nindent 4 }}
+  helperPod.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      name: {{ .Values.localPathProvisioner.configmap.helperPod.name }}
+      namespace: {{ default (include "local-path-provisioner.namespace" .) .Values.localPathProvisioner.configmap.helperPod.namespaceOverride }}
+      {{- with .Values.localPathProvisioner.configmap.helperPod.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: node.kubernetes.io/disk-pressure
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: helper-pod
+          {{- if .Values.localPathProvisioner.privateRegistry.registryUrl }}
+          image: {{ .Values.localPathProvisioner.privateRegistry.registryUrl }}/{{ .Values.localPathProvisioner.helperImage.repository }}:{{ .Values.localPathProvisioner.helperImage.tag }}
+          {{- else }}
+          image: {{ .Values.localPathProvisioner.helperImage.repository }}:{{ .Values.localPathProvisioner.helperImage.tag }}
+          {{- end }}
+          imagePullPolicy: {{ .Values.localPathProvisioner.image.pullPolicy }}
+          resources:
+            {{- toYaml .Values.localPathProvisioner.helperPod.resources | nindent 12 }}

@@ -1,0 +1,92 @@
+# Copyright 2025 The Kubermatic Kubernetes Platform contributors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: {{ .Values.project }}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: ArgoCD Project for KubeOne and KKP applications
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: '*'
+    server: {{ .Values.destinationServer }}
+
+{{- range $name, $kubeoneApp := .Values.kubeoneApps}}
+{{- if $kubeoneApp.enable }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $kubeoneApp.fullNameOverride | default $kubeoneApp.name }}
+  namespace: argocd
+  labels:
+    app.kubernetes.io/component: kubeone
+    app.kubernetes.io/app: {{ $kubeoneApp.name }}
+    app.kubernetes.io/environment: {{ $.Values.environment }}
+    app.kubernetes.io/infra: {{ $.Values.infra }}
+spec:
+  project: {{ include "kubeone-argocd-apps.project" (dict "project" $.Values.project "app" $kubeoneApp) | quote }}
+  source:
+    repoURL: {{ default $.Values.repoURL $kubeoneApp.repoURL | quote }}
+    {{- if $kubeoneApp.chart }}
+    chart: {{ $kubeoneApp.chart }}
+    {{- else }}
+    path: {{ $.Values.envSpecificFolderPath }}/charts/{{ $kubeoneApp.name }}
+    {{- end }}
+    targetRevision: {{ default $.Values.targetRevision $kubeoneApp.targetRevision | quote }}
+    {{- if and $kubeoneApp.chart $kubeoneApp.values }}
+    helm:
+      values: |
+        {{- toYaml $kubeoneApp.values | nindent 8 }}
+    {{- else }}
+    helm:
+      valueFiles:
+      - values.yaml
+    {{- end }}
+  destination:
+    server: {{ $.Values.destinationServer | quote }}
+    namespace: {{ default $name $kubeoneApp.namespace | quote }}
+  {{- if $kubeoneApp.ignoreDifferences }}
+  ignoreDifferences:
+  {{- toYaml $kubeoneApp.ignoreDifferences | nindent 2 }}
+  {{- end }}
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    {{- if $kubeoneApp.extraSyncOptions }}
+    {{- toYaml $kubeoneApp.extraSyncOptions | nindent 4 }}
+    {{- end }}
+    {{- if $kubeoneApp.retry }}
+    retry:
+      {{- toYaml $kubeoneApp.retry | nindent 6 }}
+    {{- end }}
+    {{- if $kubeoneApp.autoSync }}
+    automated:
+      {{- if $kubeoneApp.prune }}
+      prune: {{ $kubeoneApp.prune }}
+      {{- end }}
+      {{- if $kubeoneApp.selfHeal }}
+      selfHeal: {{ $kubeoneApp.selfHeal }}
+      {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
