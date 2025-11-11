@@ -26,7 +26,7 @@ environment: test
 # (Required) Name of the infrastructure (e.g., gcp, datacenter)
 infra: test
 # (Required) Specify the environment specific folder full path where KubeOne charts are present
-envSpecificFolderPath: .
+envSpecificFolderPath:
 
 # KubeOne applications configuration
 kubeoneApps:

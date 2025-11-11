@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- if ne .Values.project "default" }}
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -29,6 +30,7 @@ spec:
   destinations:
   - namespace: '*'
     server: {{ .Values.destinationServer }}
+{{- end }}
 
 {{- range $name, $kubeoneApp := .Values.kubeoneApps}}
 {{- if $kubeoneApp.enable }}
@@ -61,8 +63,8 @@ spec:
     helm:
       valueFiles:
       - values.yaml
-      - $values/{{ $.Values.envSpecificFolderPath }}/values/values.yaml
-      - $values/{{ $.Values.envSpecificFolderPath }}/overrides/values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}values/values.yaml
+      - $values/{{ $.Values.envSpecificFolderPath }}overrides/values.yaml
     {{- end }}
   destination:
     server: {{ $.Values.destinationServer | quote }}
